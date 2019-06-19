@@ -13,7 +13,7 @@ setup(
     description='Generate DRF Serializers, Views, and urls for your API application.',
     long_description=README,
 
-    url='https://github.com/brobin/drf-generators',
+    url='https://github.com/jesteban19/drf-generators.git',
     download_url = 'https://github.com/brobin/drf-generators/archive/0.4.0.zip',
     author='Tobin Brown',
     author_email='tobin@brobin.me',

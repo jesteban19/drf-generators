@@ -32,6 +32,18 @@ class Command(AppCommand):
         parser.add_argument('--urls', dest='urls', action='store_true',
                             help='generate urls only'),
 
+        parser.add_argument('--models', dest='models', default='', 
+                            help='comma separated list of models to use'),
+
+        parser.add_argument('--serializer-file', dest='serializer-file', default='serializers.py', 
+                            help='output file for serializers'),
+
+        parser.add_argument('--view-file', dest='view-file', default='views.py', 
+                            help='output file for views'),
+
+        parser.add_argument('--url-file', dest='url-file', default='urls.py', 
+                            help='output file for urls'),
+
     def handle_app_config(self, app_config, **options):
         if app_config.models_module is None:
             raise CommandError('You must provide an app to generate an API')
@@ -49,6 +61,10 @@ class Command(AppCommand):
                 serializers = False
             views = options['views'] if 'views' in options else False
             urls = options['urls'] if 'urls' in options else False
+            models = [m for m in options['models'].split(',')  if m] if 'models' in options else []
+            serializer_file = options['serializer-file'] if 'serializer-file' in options else 'serializers.py'
+            view_file = options['view-file'] if 'view-file' in options else 'views.py'
+            url_file = options['url-file'] if 'url-file' in options else 'urls.py'
 
         elif django.VERSION[1] >= 8 or django.VERSION[0] == 2:
             force = options['force']
@@ -57,28 +73,32 @@ class Command(AppCommand):
             serializers = options['serializers']
             views = options['views']
             urls = options['urls']
+            models = [m for m in options['models'].split(',') if m]
+            serializer_file = options['serializer-file']
+            view_file = options['view-file']
+            url_file = options['url-file']
         else:
             raise CommandError('You must be using Django 1.7, 1.8 or 1.9')
 
         if format == 'viewset':
-            generator = ViewSetGenerator(app_config, force)
+            generator = ViewSetGenerator(app_config, force, models)
         elif format == 'apiview':
-            generator = APIViewGenerator(app_config, force)
+            generator = APIViewGenerator(app_config, force, models)
         elif format == 'function':
-            generator = FunctionViewGenerator(app_config, force)
+            generator = FunctionViewGenerator(app_config, force, models)
         elif format == 'modelviewset':
-            generator = ModelViewSetGenerator(app_config, force)
+            generator = ModelViewSetGenerator(app_config, force, models)
         else:
             message = '\'%s\' is not a valid format. ' % options['format']
             message += '(viewset, modelviewset, apiview, function)'
             raise CommandError(message)
 
         if serializers:
-            result = generator.generate_serializers(depth)
+            result = generator.generate_serializers(depth, serializer_file)
         elif views:
-            result = generator.generate_views()
+            result = generator.generate_views(view_file)
         elif urls:
-            result = generator.generate_urls()
+            result = generator.generate_urls(url_file)
         else:
             result = generator.generate_serializers(depth) + '\n'
             result += generator.generate_views() + '\n'

@@ -13,18 +13,18 @@ __all__ = ['BaseGenerator', 'APIViewGenerator', 'ViewSetGenerator',
 
 class BaseGenerator(object):
 
-    def __init__(self, app_config, force):
+    def __init__(self, app_config, force, models):
         self.app_config = app_config
         self.force = force
         self.app = app_config.models_module
         self.name = app_config.name
         self.serializer_template = Template(SERIALIZER)
-        self.models = self.get_model_names()
+        self.models = self.get_model_names(models)
         self.serializers = self.get_serializer_names()
-        self.view_template = Template(API_VIEW)
-        self.url_template = Template(API_URL)
+        #self.view_template = Template(API_VIEW)
+        #self.url_template = Template(API_URL)
 
-    def generate_serializers(self, depth):
+    def generate_serializers(self, depth, filename):
         content = self.serializer_content(depth)
         filename = 'serializers.py'
         if self.write_file(content, filename):
@@ -32,7 +32,7 @@ class BaseGenerator(object):
         else:
             return 'Serializer generation cancelled'
 
-    def generate_views(self):
+    def generate_views(self, filename):
         content = self.view_content()
         filename = 'views.py'
         if self.write_file(content, filename):
@@ -40,7 +40,7 @@ class BaseGenerator(object):
         else:
             return 'View generation cancelled'
 
-    def generate_urls(self):
+    def generate_urls(self, filename):
         content = self.url_content()
         filename = 'urls.py'
         if self.write_file(content, filename):
@@ -62,8 +62,11 @@ class BaseGenerator(object):
         context = Context({'app': self.name, 'models': self.models})
         return self.url_template.render(context)
 
-    def get_model_names(self):
-        return [m.__name__ for m in self.app_config.get_models()]
+    def get_model_names(self, models):
+        if models:
+            return [m.__name__ for m in self.app_config.get_models() if m.__name__ in models]
+        else:
+            return [m.__name__ for m in self.app_config.get_models()]
 
     def get_serializer_names(self):
         return [m + 'Serializer' for m in self.models]
@@ -82,33 +85,33 @@ class BaseGenerator(object):
         return True
 
 
-class APIViewGenerator(BaseGenerator):
+class APIViewGenerator(BaseGenerator, models):
 
     def __init__(self, app_config, force):
         self.view_template = Template(API_VIEW)
         self.url_template = Template(API_URL)
-        super(APIViewGenerator, self).__init__(app_config, force)
+        super(APIViewGenerator, self).__init__(app_config, force, models)
 
 
-class ViewSetGenerator(BaseGenerator):
+class ViewSetGenerator(BaseGenerator, models):
 
     def __init__(self, app_config, force):
         self.view_template = Template(VIEW_SET_VIEW)
         self.url_template = Template(VIEW_SET_URL)
-        super(ViewSetGenerator, self).__init__(app_config, force)
+        super(ViewSetGenerator, self).__init__(app_config, force, models)
 
 
-class FunctionViewGenerator(BaseGenerator):
+class FunctionViewGenerator(BaseGenerator, models):
 
     def __init__(self, app_config, force):
         self.view_template = Template(FUNCTION_VIEW)
         self.url_template = Template(FUNCTION_URL)
-        super(FunctionViewGenerator, self).__init__(app_config, force)
+        super(FunctionViewGenerator, self).__init__(app_config, force, models)
 
 
-class ModelViewSetGenerator(BaseGenerator):
+class ModelViewSetGenerator(BaseGenerator, models):
 
     def __init__(self, app_config, force):
         self.view_template = Template(MODEL_VIEW)
         self.url_template = Template(MODEL_URL)
-        super(ModelViewSetGenerator, self).__init__(app_config, force)
+        super(ModelViewSetGenerator, self).__init__(app_config, force, models)
