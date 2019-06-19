@@ -35,7 +35,7 @@ class Command(AppCommand):
         parser.add_argument('--models', dest='models', default='', 
                             help='comma separated list of models to use'),
 
-        parser.add_argument('--serializer-file', dest='serializer-file', default='serializers.py', 
+        parser.add_argument('--serializers-file', dest='serializer-file', default='serializers.py',
                             help='output file for serializers'),
 
         parser.add_argument('--view-file', dest='view-file', default='views.py', 
